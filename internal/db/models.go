@@ -94,10 +94,24 @@ type TreeItem struct {
 	Items   []TreeItem `json:"items,omitempty"`
 }
 
+type Heading struct {
+	UUID         string `json:"uuid"`
+	Title        string `json:"title"`
+	ProjectID    string `json:"project_id,omitempty"`
+	ProjectTitle string `json:"project_title,omitempty"`
+	Trashed      bool   `json:"trashed"`
+}
+
 type ProjectFilter struct {
 	Status         *int
 	IncludeTrashed bool
 	AreaID         string
+}
+
+type HeadingFilter struct {
+	ProjectID             string
+	IncludeTrashed        bool
+	ExcludeTrashedContext bool
 }
 
 type TaskFilter struct {

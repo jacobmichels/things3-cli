@@ -64,6 +64,9 @@ func NewRoot(app *App) *cobra.Command {
 	cmd.AddCommand(NewUndoCommand(app))
 	cmd.AddCommand(NewShowCommand(app))
 	cmd.AddCommand(NewSearchCommand(app))
+	cmd.AddCommand(NewUpdateHeadingCommand(app))
+	cmd.AddCommand(NewDeleteHeadingCommand(app))
+	cmd.AddCommand(NewHeadingsCommand(app))
 
 	cmd.SetHelpCommand(&cobra.Command{
 		Use:   "help [command]",
@@ -138,6 +141,12 @@ func NewRoot(app *App) *cobra.Command {
 				printHelp(app.Out, formatHelpText(updateProjectHelp, isTTY(app.Out)))
 			case "delete-project":
 				printHelp(app.Out, formatHelpText(deleteProjectHelp, isTTY(app.Out)))
+			case "update-heading":
+				printHelp(app.Out, formatHelpText(updateHeadingHelp, isTTY(app.Out)))
+			case "delete-heading":
+				printHelp(app.Out, formatHelpText(deleteHeadingHelp, isTTY(app.Out)))
+			case "headings":
+				printHelp(app.Out, formatHelpText(headingsHelp, isTTY(app.Out)))
 			case "help":
 				printHelp(app.Out, formatHelpText(rootHelp, isTTY(app.Out)))
 			default:
@@ -218,6 +227,12 @@ func NewRoot(app *App) *cobra.Command {
 			printHelp(app.Out, formatHelpText(updateProjectHelp, isTTY(app.Out)))
 		case "delete-project":
 			printHelp(app.Out, formatHelpText(deleteProjectHelp, isTTY(app.Out)))
+		case "update-heading":
+			printHelp(app.Out, formatHelpText(updateHeadingHelp, isTTY(app.Out)))
+		case "delete-heading":
+			printHelp(app.Out, formatHelpText(deleteHeadingHelp, isTTY(app.Out)))
+		case "headings":
+			printHelp(app.Out, formatHelpText(headingsHelp, isTTY(app.Out)))
 		default:
 			printHelp(app.Out, formatHelpText(rootHelp, isTTY(app.Out)))
 		}

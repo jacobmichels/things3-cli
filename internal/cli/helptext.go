@@ -22,6 +22,8 @@ COMMANDS
   delete-area    - delete an area
   update-project - update exiting project
   delete-project - delete an existing project
+  update-heading - update an existing heading
+  delete-heading - delete an existing heading
   show           - show an area, project, tag, or todo from the Things database
   search         - search tasks in the Things database
   inbox          - list inbox tasks from the Things database
@@ -39,6 +41,7 @@ COMMANDS
   deadlines      - list tasks with deadlines from the Things database
   all            - list key sections from the Things database
   projects       - list projects from the Things database
+  headings       - list headings from the Things database
   areas          - list areas from the Things database
   tags           - list tags from the Things database
   tasks          - list todos from the Things database
@@ -2389,4 +2392,116 @@ EXAMPLES
 
 SEE ALSO
   Authorization: https://culturedcode.com/things/support/articles/2803573/#overview-authorization
+`
+
+const headingsHelp = `Usage: things headings [OPTIONS...]
+
+NAME
+  things headings - list headings from the Things database
+
+SYNOPSIS
+  things headings [OPTIONS...]
+
+DESCRIPTION
+  Lists headings (sections) from the local Things database (read-only). Use
+  {{BT}}--project{{BT}} or {{BT}}--project-id{{BT}} to filter by project.
+
+OPTIONS
+  --db=PATH
+    Path to the Things database. Overrides the THINGSDB environment variable.
+
+  --project-id=ID
+    Filter by project ID.
+
+  --project=TITLE
+    Filter by project title or ID.
+
+  --include-trashed
+    Include trashed headings.
+
+  --json
+    Output JSON.
+
+  --no-header
+    Suppress the header row.
+
+NOTES
+  The database lives in the Things app sandbox. You may need to grant your
+  terminal Full Disk Access to read it.
+`
+
+const updateHeadingHelp = `Usage: things update-heading [OPTIONS...] [--] [-|TITLE]
+
+NAME
+  things update-heading - update an existing heading
+
+SYNOPSIS
+  things update-heading [OPTIONS...] [--] [-|TITLE]
+
+DESCRIPTION
+  Renames an existing heading by writing directly to the Things database.
+  Things 3 must be restarted to reflect the change in the UI.
+
+  The heading can be identified by {{BT}}--id={{BT}} or by its current title from the
+  positional argument/STDIN. When targeting by title, {{BT}}--project-id={{BT}} or
+  {{BT}}--project={{BT}} is required to scope the lookup. If {{BT}}-{{BT}} is given as a
+  title, it is read from STDIN.
+
+OPTIONS
+  --id=ID
+    The ID of the heading to update. Optional if a title is provided.
+
+  --project-id=ID
+    Project ID (required when targeting by title).
+
+  --project=TITLE
+    Project title (required when targeting by title).
+
+  --title=TITLE
+    New title for the heading. Required.
+
+EXAMPLES
+  things update-heading --id=ABC123 --title="Phase 2"
+
+  things update-heading --project-id=XYZ --title="Phase 2" "Phase 1"
+`
+
+const deleteHeadingHelp = `Usage: things delete-heading [OPTIONS...] [--] [-|TITLE]
+
+NAME
+  things delete-heading - delete an existing heading
+
+SYNOPSIS
+  things delete-heading [OPTIONS...] [--] [-|TITLE]
+
+DESCRIPTION
+  Deletes an existing heading by writing directly to the Things database.
+  Things 3 must be restarted to reflect the change in the UI.
+
+  When running interactively, you will be prompted to confirm the deletion.
+  For non-interactive use, pass {{BT}}--confirm={{BT}} with the heading ID or title.
+
+  The heading can be identified by {{BT}}--id={{BT}} or by title from the positional
+  argument/STDIN. When targeting by title, {{BT}}--project-id={{BT}} or {{BT}}--project={{BT}}
+  is required to scope the lookup. If {{BT}}-{{BT}} is given as a title, it is read
+  from STDIN.
+
+OPTIONS
+  --id=ID
+    The ID of the heading to delete. Optional if a title is provided.
+
+  --project-id=ID
+    Project ID (required when targeting by title).
+
+  --project=TITLE
+    Project title (required when targeting by title).
+
+  --confirm=VALUE
+    Confirm deletion by typing the heading ID or title. Required in
+    non-interactive mode. Optional when prompted.
+
+EXAMPLES
+  things delete-heading --id=ABC123
+
+  things delete-heading --project-id=XYZ "Phase 1"
 `

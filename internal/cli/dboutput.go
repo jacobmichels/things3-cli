@@ -59,6 +59,21 @@ func printTags(out io.Writer, tags []db.Tag, asJSON bool, noHeader bool) error {
 	return w.Flush()
 }
 
+func printHeadings(out io.Writer, headings []db.Heading, asJSON bool, noHeader bool) error {
+	if asJSON {
+		enc := json.NewEncoder(out)
+		return enc.Encode(headings)
+	}
+	w := tabwriter.NewWriter(out, 0, 2, 2, ' ', 0)
+	if !noHeader {
+		fmt.Fprintln(w, "UUID\tTITLE\tPROJECT\tTRASHED")
+	}
+	for _, h := range headings {
+		fmt.Fprintf(w, "%s\t%s\t%s\t%t\n", h.UUID, h.Title, h.ProjectTitle, h.Trashed)
+	}
+	return w.Flush()
+}
+
 func printTasks(out io.Writer, tasks []db.Task, opts TaskOutputOptions) error {
 	if opts.Format == "" {
 		opts.Format = "table"

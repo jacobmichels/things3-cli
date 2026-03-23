@@ -501,6 +501,116 @@ func taskTypeLabel(taskType int) string {
 	}
 }
 
+// Headings returns headings matching the given filter.
+func (s *Store) Headings(filter HeadingFilter) ([]Heading, error) {
+	var b strings.Builder
+	b.WriteString("SELECT t.uuid, t.title, t.trashed, IFNULL(t.project, ''), IFNULL(p.title, '') ")
+	b.WriteString("FROM TMTask t ")
+	b.WriteString("LEFT JOIN TMTask p ON t.project = p.uuid ")
+	b.WriteString("WHERE t.type = ?")
+
+	params := []any{TaskTypeHeading}
+
+	if !filter.IncludeTrashed {
+		b.WriteString(" AND t.trashed = 0")
+	}
+	if filter.ExcludeTrashedContext {
+		b.WriteString(" AND NOT IFNULL(p.trashed, 0)")
+	}
+	if filter.ProjectID != "" {
+		b.WriteString(" AND t.project = ?")
+		params = append(params, filter.ProjectID)
+	}
+	b.WriteString(" ORDER BY t.\"index\"")
+
+	rows, err := s.conn.Query(b.String(), params...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	headings := make([]Heading, 0, 16)
+	for rows.Next() {
+		var h Heading
+		var trashed int
+		if err := rows.Scan(&h.UUID, &h.Title, &trashed, &h.ProjectID, &h.ProjectTitle); err != nil {
+			return nil, err
+		}
+		h.Trashed = trashed != 0
+		headings = append(headings, h)
+	}
+	return headings, rows.Err()
+}
+
+// ResolveHeadingID resolves a heading by UUID or by title within a project.
+func (s *Store) ResolveHeadingID(input string, projectID string) (string, error) {
+	var id string
+	if err := s.conn.QueryRow(
+		"SELECT uuid FROM TMTask WHERE uuid = ? AND type = ?", input, TaskTypeHeading,
+	).Scan(&id); err == nil {
+		return id, nil
+	}
+	q := "SELECT uuid FROM TMTask WHERE lower(title) = lower(?) AND type = ?"
+	args := []any{input, TaskTypeHeading}
+	if projectID != "" {
+		q += " AND project = ?"
+		args = append(args, projectID)
+	}
+	if err := s.conn.QueryRow(q, args...).Scan(&id); err == nil {
+		return id, nil
+	}
+	return "", fmt.Errorf("heading not found: %q", input)
+}
+
+// RenameHeading updates the title of a heading by UUID.
+func (s *Store) RenameHeading(id string, newTitle string) error {
+	modified := float64(time.Now().Unix())
+	result, err := s.conn.Exec(
+		"UPDATE TMTask SET title = ?, userModificationDate = ? WHERE uuid = ? AND type = ?",
+		newTitle, modified, id, TaskTypeHeading,
+	)
+	if err != nil {
+		return err
+	}
+	n, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if n == 0 {
+		return fmt.Errorf("heading not found: %s", id)
+	}
+	return nil
+}
+
+// DeleteHeading permanently deletes a heading by UUID. Tasks under the heading
+// are detached (heading reference cleared) rather than deleted.
+func (s *Store) DeleteHeading(id string) error {
+	modified := float64(time.Now().Unix())
+
+	// Verify it exists first.
+	var count int
+	if err := s.conn.QueryRow(
+		"SELECT COUNT(*) FROM TMTask WHERE uuid = ? AND type = ?", id, TaskTypeHeading,
+	).Scan(&count); err != nil {
+		return err
+	}
+	if count == 0 {
+		return fmt.Errorf("heading not found: %s", id)
+	}
+
+	// Detach tasks that were under this heading.
+	if _, err := s.conn.Exec(
+		"UPDATE TMTask SET heading = NULL, userModificationDate = ? WHERE heading = ?",
+		modified, id,
+	); err != nil {
+		return err
+	}
+
+	// Hard delete the heading row.
+	_, err := s.conn.Exec("DELETE FROM TMTask WHERE uuid = ? AND type = ?", id, TaskTypeHeading)
+	return err
+}
+
 // ResolveAreaID resolves an area by UUID or title.
 func (s *Store) ResolveAreaID(input string) (string, error) {
 	return resolveAreaID(s.conn, input)
