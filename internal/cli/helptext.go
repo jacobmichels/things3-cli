@@ -43,6 +43,7 @@ COMMANDS
   tags           - list tags from the Things database
   tasks          - list todos from the Things database
   auth           - show Things auth token status and setup help
+  completion     - generate shell completion scripts
   help           - show documentation for the given command
 
 GLOBAL OPTIONS
@@ -2389,4 +2390,27 @@ EXAMPLES
 
 SEE ALSO
   Authorization: https://culturedcode.com/things/support/articles/2803573/#overview-authorization
+`
+
+const completionHelp = `Usage: things completion <SHELL>
+
+NAME
+  things completion - generate shell completion scripts
+
+SYNOPSIS
+  things completion <SHELL>
+
+DESCRIPTION
+  Generate shell completion scripts for things. Supported shells:
+  bash, zsh, fish, powershell.
+
+EXAMPLES
+  # Fish (add to fish completions directory):
+  things completion fish > ~/.config/fish/completions/things.fish
+
+  # Bash (load for current session):
+  source <(things completion bash)
+
+  # Zsh:
+  things completion zsh > "${fpath[1]}/_things"
 `
